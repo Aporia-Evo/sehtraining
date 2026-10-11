@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ResponseInput } from '../../src/io/input';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { ResponseInput, type ResponseEvent } from '../../src/io/input';
 
 function pointerDown(target: EventTarget): Event {
   // jsdom kennt PointerEvent nicht in allen Versionen; ein Event mit passendem Typ genügt
@@ -12,13 +12,13 @@ function pointerDown(target: EventTarget): Event {
 describe('ResponseInput', () => {
   let target: HTMLDivElement;
   let input: ResponseInput;
-  let cb: ReturnType<typeof vi.fn>;
+  let cb: Mock<(e: ResponseEvent) => void>;
 
   beforeEach(() => {
     target = document.createElement('div');
     document.body.appendChild(target);
     input = new ResponseInput(target);
-    cb = vi.fn();
+    cb = vi.fn<(e: ResponseEvent) => void>();
   });
   afterEach(() => {
     input.dispose();
