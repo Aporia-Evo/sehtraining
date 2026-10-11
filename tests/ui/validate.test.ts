@@ -18,3 +18,18 @@ describe('parseCm', () => {
     expect(parseCm(input)).toEqual({ ok: false, message: MSG });
   });
 });
+
+import { geometryProblems } from '../../src/ui/validate';
+import { makeGeometry } from '../../src/core/geometry';
+
+describe('geometryProblems', () => {
+  it('normale iPad-Geometrie ohne Problem', () => {
+    const g = makeGeometry({ screenWidthCm: 24, viewingDistanceCm: 30, fixationXFraction: 2 / 3, fixationYFraction: 0.5 }, 1200, 800);
+    expect(geometryProblems(g)).toEqual([]);
+  });
+  it('kein Rasterpunkt rechts (zu großer Abstand, Kreuz ganz rechts) → Meldung', () => {
+    const g = makeGeometry({ screenWidthCm: 24, viewingDistanceCm: 200, fixationXFraction: 0.8, fixationYFraction: 0.5 }, 1200, 800);
+    expect(geometryProblems(g)).toHaveLength(1);
+    expect(geometryProblems(g)[0]).toMatch(/rechts/i);
+  });
+});

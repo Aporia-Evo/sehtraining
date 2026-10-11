@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { gridPoints } from '../../../core/blocks';
 import { maxEccentricityDeg, type GeometryInput } from '../../../core/geometry';
 import { currentGeometry, isLandscape } from '../../browserDeps';
-import { parseCm } from '../../validate';
+import { geometryProblems, parseCm } from '../../validate';
 
 export function GeometryStep(props: { initial: GeometryInput; onNext(g: GeometryInput): void }) {
   const [width, setWidth] = useState(String(props.initial.screenWidthCm).replace('.', ','));
@@ -15,6 +15,7 @@ export function GeometryStep(props: { initial: GeometryInput; onNext(g: Geometry
     ? { screenWidthCm: w.value, viewingDistanceCm: d.value, fixationXFraction: fixX, fixationYFraction: 0.5 }
     : null;
   const g = geometry ? currentGeometry(geometry) : null;
+  const problems = g ? geometryProblems(g) : [];
 
   return (
     <div>
@@ -50,7 +51,10 @@ export function GeometryStep(props: { initial: GeometryInput; onNext(g: Geometry
           Rasterpunkte links: {gridPoints(g, 'L').length}, rechts: {gridPoints(g, 'R').length}.
         </p>
       )}
-      <button class="primary" disabled={!geometry} onClick={() => geometry && props.onNext(geometry)}>
+      {problems.map((p) => (
+        <p class="error">{p}</p>
+      ))}
+      <button class="primary" disabled={!geometry || problems.length > 0} onClick={() => geometry && props.onNext(geometry)}>
         Weiter
       </button>
     </div>
