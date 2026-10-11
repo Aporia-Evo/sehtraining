@@ -10,6 +10,7 @@ import { currentGeometry, isLandscape } from '../browserDeps';
 import { blockSummary } from '../routing';
 import { dayKey, newId, runBlock } from '../session';
 import { TrialStage } from '../TrialStage';
+import { unlockAudio } from '../unlockAudio';
 
 export const M1_BLOCK_TRIALS = 20;
 
@@ -36,10 +37,10 @@ export function TrainingScreen(props: { db: Db; audio: AudioEngine; settings: Se
     return session.current;
   };
 
-  const resume = async () => {
+  const resume = () => {
     if (!isLandscape()) return;
-    await props.audio.ensureRunning();
-    setView((v) => ({ kind: 'running', run: v.kind === 'running' ? v.run + 1 : Date.now() }));
+    unlockAudio(props.audio);
+    setView({ kind: 'running', run: Date.now() });
   };
 
   if (view.kind === 'running') {
@@ -79,14 +80,14 @@ export function TrainingScreen(props: { db: Db; audio: AudioEngine; settings: Se
 
   if (view.kind === 'paused') {
     return (
-      <div class="patient screen overlay-message" onPointerDown={() => void resume()}>
+      <div class="patient screen overlay-message" onClick={resume}>
         {isLandscape() ? 'Pause. Tippe zum Weitermachen.' : 'Bitte das iPad quer halten.'}
       </div>
     );
   }
 
   return (
-    <div class="patient screen summary" onPointerDown={props.onExit}>
+    <div class="patient screen summary" onClick={props.onExit}>
       <div>
         Heute {view.found} von {view.total} gefunden.
       </div>

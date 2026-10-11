@@ -8,6 +8,7 @@ import { StartScreen } from './patient/StartScreen';
 import { TrainingScreen } from './patient/TrainingScreen';
 import { resolveRoute } from './routing';
 import { SetupWizard } from './setup/SetupWizard';
+import { unlockAudio } from './unlockAudio';
 
 export function App() {
   const audio = useMemo(() => new AudioEngine(), []);
@@ -66,7 +67,7 @@ export function App() {
         <StartScreen
           onStart={() => {
             // Audio und Bildschirmsperre nur innerhalb einer Berührung freischalten (iOS)
-            void audio.ensureRunning();
+            unlockAudio(audio);
             void (navigator as Navigator & { wakeLock?: { request(t: 'screen'): Promise<unknown> } }).wakeLock
               ?.request('screen')
               .catch(() => undefined);
