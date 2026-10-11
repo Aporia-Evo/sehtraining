@@ -100,3 +100,11 @@ describe('initialVolume', () => {
     expect(initialVolume(0.3)).toBe(0.3);
   });
 });
+
+describe('startupAudioSettings', () => {
+  it('begrenzt die gespeicherte Lautstärke beim App-Start auf 50 %', async () => {
+    const { startupAudioSettings } = await import('../../src/io/audio');
+    expect(startupAudioSettings({ outputMode: 'speakers', volume: 1, balance: 0.2 })).toEqual({ outputMode: 'speakers', volume: 0.5, balance: 0.2 });
+    expect(startupAudioSettings({ outputMode: 'headphones', volume: 0.3, balance: 0 }).volume).toBe(0.3);
+  });
+});

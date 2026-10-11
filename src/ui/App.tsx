@@ -1,6 +1,6 @@
 /** App-Gerüst: lädt Datenbank und Einstellungen, wählt den Bildschirm nach dem Hash. */
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { AudioEngine } from '../io/audio';
+import { AudioEngine, startupAudioSettings } from '../io/audio';
 import { openDb, type Db, type Settings } from '../store/db';
 import { ExportPage } from './admin/ExportPage';
 import { TestPage } from './admin/TestPage';
@@ -23,7 +23,7 @@ export function App() {
       .then(async (d) => {
         setDb(d);
         const s = await d.getSettings();
-        audio.apply(s.audio);
+        audio.apply(startupAudioSettings(s.audio));
         setSettings(s);
       })
       .catch(() => setError('Der Speicher dieses Geräts ist nicht verfügbar. Bitte die App vom Home-Bildschirm starten, nicht im privaten Modus.'));
@@ -35,7 +35,7 @@ export function App() {
   const reload = async () => {
     if (!db) return;
     const s = await db.getSettings();
-    audio.apply(s.audio);
+    audio.apply(startupAudioSettings(s.audio));
     setSettings(s);
   };
 

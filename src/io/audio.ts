@@ -27,6 +27,11 @@ export function initialVolume(saved: number | null): number {
   return Math.min(saved ?? 0.5, 0.5);
 }
 
+/** Beim App-Start: gespeicherte Einstellungen, Lautstärke höchstens 50 % des Deckels (Spec 10). */
+export function startupAudioSettings(a: AudioSettings): AudioSettings {
+  return { ...a, volume: initialVolume(a.volume) };
+}
+
 function clamp(x: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, x));
 }
