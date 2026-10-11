@@ -22,8 +22,8 @@ export interface RunnerDeps {
   /** requestAnimationFrame */
   frame(cb: (t: number) => void): void;
   draw(state: DrawState): void;
-  /** Plant den Ton; Beginn bei t0Ms + plan.soaMs auf der now()-Zeitachse. */
-  scheduleSound(plan: TrialPlan, t0Ms: number): void;
+  /** Plant den Ton; Beginn bei t0Ms + plan.soaMs auf der now()-Zeitachse. Liefert, ob er wirklich geplant wurde. */
+  scheduleSound(plan: TrialPlan, t0Ms: number): boolean;
   input: { arm(cb: (e: ResponseEvent) => void): void; disarm(): void };
   geometry(): Geometry;
   signals: { onAbort(cb: (reason: AbortReason) => void): () => void };
@@ -50,6 +50,7 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
 
     let responseMs: number | null = null;
     let soundScheduled = false;
+    let soundPlayed = false;
     let finished = false;
     let lastFrameMs = deps.now();
 
@@ -68,6 +69,7 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
         contrast: stim?.contrast ?? null,
         sigmaDeg: stim?.sigmaDeg ?? null,
         stimulusPx: stim ? { x: stim.x, y: stim.y } : null,
+        soundPlayed,
         fixationOk: null,
         abortReason,
       });
@@ -92,7 +94,7 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
       }
       if (!soundScheduled && plan.sound !== 'none' && now >= t0 + plan.soaMs - SOUND_LOOKAHEAD_MS) {
         soundScheduled = true;
-        deps.scheduleSound(plan, t0);
+        soundPlayed = deps.scheduleSound(plan, t0) === true;
       }
       const gain = stim ? envelope(now - t0, plan.rampMs, plan.plateauMs) : 0;
       deps.draw({

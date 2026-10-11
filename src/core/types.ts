@@ -45,6 +45,8 @@ export interface TrialRecord extends TrialPlan {
   contrast: number | null;
   sigmaDeg: number | null;
   stimulusPx: { x: number; y: number } | null;
+  /** Ob der Ton tatsächlich geplant wurde (false bei Tonbedingung 'none' oder stummem Audio). */
+  soundPlayed: boolean;
   /** null ohne Kamera. */
   fixationOk: boolean | null;
   abortReason: string | null;

@@ -34,6 +34,7 @@ export function sampleRecord(overrides: Partial<TrialRecord> = {}): TrialRecord 
     contrast: 0.89,
     sigmaDeg: 0.5,
     stimulusPx: { x: 300, y: 400 },
+    soundPlayed: true,
     fixationOk: null,
     abortReason: null,
     ...overrides,

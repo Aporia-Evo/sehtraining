@@ -37,9 +37,9 @@ export function createAbortSignals(win: Window, doc: Document): RunnerDeps['sign
   };
 }
 
-/** Startzeit des Tons auf der AudioContext-Uhr; nie in der Vergangenheit. */
-export function soundStartSec(a: { t0Ms: number; soaMs: number; nowMs: number; audioNowSec: number }): number {
-  return a.audioNowSec + Math.max(0, (a.t0Ms + a.soaMs - a.nowMs) / 1000);
+/** Startzeit des Tons auf der AudioContext-Uhr, um die Ausgabelatenz vorgezogen; nie in der Vergangenheit. */
+export function soundStartSec(a: { t0Ms: number; soaMs: number; nowMs: number; audioNowSec: number; latencySec?: number }): number {
+  return a.audioNowSec + Math.max(0, (a.t0Ms + a.soaMs - a.nowMs) / 1000 - (a.latencySec ?? 0));
 }
 
 export function currentGeometry(input: GeometryInput): Geometry {
@@ -64,15 +64,24 @@ export function createBrowserDeps(args: {
     },
     draw: createCanvasDraw(args.canvas, getGeometry),
     scheduleSound: (plan, t0Ms) => {
-      if (!plan.pos || plan.sound === 'none') return;
+      if (!plan.pos || plan.sound === 'none') return false;
+      // Steht die Audio-Uhr (iOS: suspended/interrupted), würden sich Töne stauen und später gleichzeitig erklingen
+      if (!args.audio.isRunning()) return false;
       const pos = plan.sound === 'wrongSide' ? mirrorToRight(plan.pos) : plan.pos;
       args.audio.scheduleBurst({
         pos,
         gainDb: plan.soundGainDb,
-        atSec: soundStartSec({ t0Ms, soaMs: plan.soaMs, nowMs: performance.now(), audioNowSec: args.audio.nowSec() }),
+        atSec: soundStartSec({
+          t0Ms,
+          soaMs: plan.soaMs,
+          nowMs: performance.now(),
+          audioNowSec: args.audio.nowSec(),
+          latencySec: args.audio.outputLatencySec(),
+        }),
         rampMs: plan.rampMs,
         plateauMs: plan.plateauMs,
       });
+      return true;
     },
     input: args.input,
     geometry: getGeometry,

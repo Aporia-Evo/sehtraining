@@ -78,6 +78,18 @@ export class AudioEngine {
     return this.ctx?.currentTime ?? 0;
   }
 
+  /** Nur bei laufendem Kontext steht die Audio-Uhr nicht still. */
+  isRunning(): boolean {
+    return (this.ctx?.state as string | undefined) === 'running';
+  }
+
+  /** Geschätzte Zeit vom Planen bis zum Klang am Ohr (Verarbeitung + Ausgabe, z. B. Bluetooth). */
+  outputLatencySec(): number {
+    if (!this.ctx) return 0;
+    const c = this.ctx as AudioContext & { outputLatency?: number };
+    return (c.baseLatency || 0) + (c.outputLatency || 0);
+  }
+
   /** Rauschimpuls vom Ort pos, Beginn zur AudioContext-Zeit atSec, mit derselben Hüllkurve wie das Licht. */
   scheduleBurst(opts: { pos: VisualPos; gainDb: number; atSec: number; rampMs: number; plateauMs: number }): void {
     const { ctx, master, noise } = this;

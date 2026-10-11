@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { createAbortSignals, soundStartSec } from '../../src/ui/browserDeps';
+import { createAbortSignals, soundStartSec, createBrowserDeps } from '../../src/ui/browserDeps';
+import type { AudioEngine } from '../../src/io/audio';
+import { DEFAULT_GEOMETRY } from '../../src/store/db';
+import { samplePlan } from '../helpers/plans';
 
 describe('createAbortSignals', () => {
   it('meldet hidden bei visibilitychange', () => {
@@ -55,5 +58,44 @@ describe('soundStartSec', () => {
   });
   it('nie in der Vergangenheit', () => {
     expect(soundStartSec({ t0Ms: 1000, soaMs: 0, nowMs: 1200, audioNowSec: 5 })).toBe(5);
+  });
+});
+
+describe('soundStartSec mit Ausgabelatenz', () => {
+  it('zieht die Latenz ab, damit Ton und Licht gleichzeitig ankommen', () => {
+    expect(soundStartSec({ t0Ms: 1500, soaMs: 0, nowMs: 1000, audioNowSec: 5, latencySec: 0.1 })).toBeCloseTo(5.4);
+  });
+  it('nie vor der aktuellen Audiozeit', () => {
+    expect(soundStartSec({ t0Ms: 1050, soaMs: 0, nowMs: 1000, audioNowSec: 5, latencySec: 0.2 })).toBe(5);
+  });
+});
+
+describe('createBrowserDeps.scheduleSound', () => {
+  function fakeAudio(running: boolean) {
+    return {
+      isRunning: () => running,
+      nowSec: () => 5,
+      outputLatencySec: () => 0.05,
+      scheduleBurst: vi.fn(),
+    };
+  }
+  const deps = (audio: ReturnType<typeof fakeAudio>) =>
+    createBrowserDeps({
+      canvas: document.createElement('canvas'),
+      audio: audio as unknown as AudioEngine,
+      input: { arm: () => undefined, disarm: () => undefined } as never,
+      geometry: DEFAULT_GEOMETRY,
+    });
+
+  it('spielt keinen Ton, solange der Audio-Kontext nicht läuft (sonst stauen sich Töne)', () => {
+    const a = fakeAudio(false);
+    expect(deps(a).scheduleSound(samplePlan(), performance.now() + 100)).toBe(false);
+    expect(a.scheduleBurst).not.toHaveBeenCalled();
+  });
+
+  it('plant den Ton bei laufendem Kontext', () => {
+    const a = fakeAudio(true);
+    expect(deps(a).scheduleSound(samplePlan(), performance.now() + 100)).toBe(true);
+    expect(a.scheduleBurst).toHaveBeenCalledTimes(1);
   });
 });

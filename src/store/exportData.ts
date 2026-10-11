@@ -41,7 +41,7 @@ export async function importAll(db: Db, bundle: unknown): Promise<{ sessions: nu
 export const CSV_COLUMNS = [
   'id', 'sessionId', 'index', 'startedAtIso', 'kind', 'side', 'eccDeg', 'angleDeg', 'gridPointId', 'level',
   'contrast', 'sigmaDeg', 'sound', 'soaMs', 'soundGainDb', 'waitMs', 'responseWindowMs', 'phase', 'outcome',
-  'rtMs', 'fixationOk', 'abortReason',
+  'rtMs', 'soundPlayed', 'fixationOk', 'abortReason',
 ] as const;
 
 type Column = (typeof CSV_COLUMNS)[number];

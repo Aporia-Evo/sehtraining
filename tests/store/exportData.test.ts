@@ -8,7 +8,7 @@ let n = 0;
 const freshDb = () => openDb(`export-db-${n++}`);
 
 const HEADER =
-  'id;sessionId;index;startedAtIso;kind;side;eccDeg;angleDeg;gridPointId;level;contrast;sigmaDeg;sound;soaMs;soundGainDb;waitMs;responseWindowMs;phase;outcome;rtMs;fixationOk;abortReason';
+  'id;sessionId;index;startedAtIso;kind;side;eccDeg;angleDeg;gridPointId;level;contrast;sigmaDeg;sound;soaMs;soundGainDb;waitMs;responseWindowMs;phase;outcome;rtMs;soundPlayed;fixationOk;abortReason';
 
 describe('Export und Import', () => {
   it('Runde ohne Verlust', async () => {

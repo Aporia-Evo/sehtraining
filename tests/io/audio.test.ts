@@ -108,3 +108,24 @@ describe('startupAudioSettings', () => {
     expect(startupAudioSettings({ outputMode: 'headphones', volume: 0.3, balance: 0 }).volume).toBe(0.3);
   });
 });
+
+describe('AudioEngine Zustand und Latenz', () => {
+  it('isRunning und Latenz aus base- plus outputLatency', async () => {
+    const { ctx } = fakeContext('running');
+    Object.assign(ctx, { baseLatency: 0.01, outputLatency: 0.04 });
+    const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+    expect(eng.isRunning()).toBe(false);
+    expect(eng.outputLatencySec()).toBe(0);
+    await eng.ensureRunning();
+    expect(eng.isRunning()).toBe(true);
+    expect(eng.outputLatencySec()).toBeCloseTo(0.05);
+    ctx.state = 'interrupted';
+    expect(eng.isRunning()).toBe(false);
+  });
+  it('fehlende Latenzangaben zählen als 0', async () => {
+    const { ctx } = fakeContext('running');
+    const eng = new AudioEngine(() => ctx as unknown as AudioContext);
+    await eng.ensureRunning();
+    expect(eng.outputLatencySec()).toBe(0);
+  });
+});

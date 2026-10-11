@@ -114,4 +114,23 @@ describe('runTrial', () => {
     const r = await p;
     expect(r.outcome).toBe('miss');
   });
+
+  it('speichert, ob der Ton wirklich gespielt wurde', async () => {
+    const f = fakeDeps();
+    (f.deps.scheduleSound as unknown as { mockReturnValue(v: boolean): void }).mockReturnValue(false);
+    const p = runTrial(samplePlan(), f.deps, ISO);
+    f.advanceTo(T0 + 2100);
+    expect((await p).soundPlayed).toBe(false);
+
+    const g = fakeDeps();
+    (g.deps.scheduleSound as unknown as { mockReturnValue(v: boolean): void }).mockReturnValue(true);
+    const q = runTrial(samplePlan(), g.deps, ISO);
+    g.advanceTo(T0 + 2100);
+    expect((await q).soundPlayed).toBe(true);
+
+    const h = fakeDeps();
+    const r = runTrial(samplePlan({ sound: 'none' }), h.deps, ISO);
+    h.advanceTo(T0 + 2100);
+    expect((await r).soundPlayed).toBe(false);
+  });
 });
