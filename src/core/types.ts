@@ -50,4 +50,7 @@ export interface TrialRecord extends TrialPlan {
   /** null ohne Kamera. */
   fixationOk: boolean | null;
   abortReason: string | null;
+  /** Treppenstufe der Region vor/nach diesem Durchgang; null, wenn der Durchgang die Treppe nicht bewegt hat. */
+  stairBefore: number | null;
+  stairAfter: number | null;
 }

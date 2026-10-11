@@ -37,6 +37,8 @@ export function sampleRecord(overrides: Partial<TrialRecord> = {}): TrialRecord 
     soundPlayed: true,
     fixationOk: null,
     abortReason: null,
+    stairBefore: null,
+    stairAfter: null,
     ...overrides,
   };
 }

@@ -72,6 +72,8 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
         soundPlayed,
         fixationOk: null,
         abortReason,
+        stairBefore: null,
+        stairAfter: null,
       });
     };
 

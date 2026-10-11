@@ -43,7 +43,7 @@ export function gridPoints(g: Geometry, side: Side): GridPoint[] {
 }
 
 /** Verschiebt einen Rasterpunkt um bis zu ±1° radial und ±1° tangential; bleibt auf dem Bildschirm. */
-function jitter(rng: Rng, g: Geometry, p: VisualPos): VisualPos {
+export function jitterPosition(rng: Rng, g: Geometry, p: VisualPos): VisualPos {
   for (let attempt = 0; attempt < 10; attempt++) {
     const eccDeg = p.eccDeg + rng.uniform(-JITTER_DEG, JITTER_DEG);
     const dAngle = ((rng.uniform(-JITTER_DEG, JITTER_DEG) / Math.max(p.eccDeg, 1)) * 180) / Math.PI;
@@ -78,7 +78,7 @@ export function createBasicPlanner(rng: Rng, opts: BasicPlannerOptions): { next(
         const grid = grids[kind === 'left' ? 'L' : 'R'];
         if (grid.length === 0) throw new Error('Kein Rasterpunkt passt auf den Bildschirm. Geometrie prüfen.');
         const gp = grid[rng.int(grid.length)]!;
-        pos = jitter(rng, opts.geometry, gp.pos);
+        pos = jitterPosition(rng, opts.geometry, gp.pos);
         gridPointId = gp.id;
       }
       const plan: TrialPlan = {
