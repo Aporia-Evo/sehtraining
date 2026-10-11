@@ -90,13 +90,53 @@ describe('next()', () => {
     expect(plans[3]!.id).toBe('s-3');
   });
 
-  it('rechte Pläne haben Referenzstufe, linke Stufe der Region', () => {
+  it('rechte Pläne haben Referenzstufe', () => {
     const p = planner();
+    let seen = 0;
     for (let i = 0; i < 200; i++) {
       const plan = p.next();
-      if (plan.kind === 'right') expect(plan.level).toBe(6);
-      if (plan.kind === 'left') expect(plan.level).toBe(6); // frische Treppen
+      if (plan.kind !== 'right') continue;
+      seen++;
+      expect(plan.level).toBe(6);
     }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('linke Pläne tragen die Treppenstufe ihrer Region', () => {
+    const s = createControllerState(g);
+    s.stairs.upper.level = 3;
+    s.stairs.lower.level = 8; // Mitte bleibt bei 6
+    const p = planner(s);
+    const expected = { upper: 3, middle: 6, lower: 8 } as const;
+    const seen = { upper: 0, middle: 0, lower: 0 };
+    for (let i = 0; i < 400; i++) {
+      const plan = p.next();
+      if (plan.kind !== 'left') continue;
+      const gp = s.map.points.find((q) => q.id === plan.gridPointId)!;
+      const region = regionOf(gp.pos.angleDeg);
+      seen[region]++;
+      expect(plan.level).toBe(expected[region]);
+    }
+    expect(seen.upper).toBeGreaterThan(0);
+    expect(seen.middle).toBeGreaterThan(0);
+    expect(seen.lower).toBeGreaterThan(0);
+  });
+
+  it('nach zwei Treffern in einer Region trägt der nächste Plan dieser Region die gesenkte Stufe', () => {
+    const p = planner();
+    const first = nextOf(p, 'left', 'sync');
+    const region = regionOf(p.state().map.points.find((q) => q.id === first.gridPointId)!.pos.angleDeg);
+    p.apply(recordOf(first, 'hit'));
+    p.apply(recordOf(first, 'hit'));
+    let checked = 0;
+    for (let i = 0; i < 400; i++) {
+      const plan = p.next();
+      if (plan.kind !== 'left') continue;
+      const r = regionOf(p.state().map.points.find((q) => q.id === plan.gridPointId)!.pos.angleDeg);
+      expect(plan.level).toBe(r === region ? 4 : 6);
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it('kein linker Punkt zweimal direkt hintereinander (nach Raster-ID)', () => {
