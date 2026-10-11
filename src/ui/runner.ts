@@ -1,0 +1,101 @@
+/**
+ * Ablauf eines Durchgangs (Spec 6): Kreuz, Wartezeit, Reiz mit Hüllkurve, Antwortfenster.
+ * Alle Abhängigkeiten werden injiziert, damit der Ablauf mit Fake-Uhr testbar ist.
+ */
+import { sigmaDegToPx, visualToPx, type Geometry } from '../core/geometry';
+import { envelope, levelParams } from '../core/stimulus';
+import { classifyResponse } from '../core/trial';
+import type { TrialPlan, TrialRecord } from '../core/types';
+import type { ResponseEvent } from '../io/input';
+
+export interface DrawState {
+  fixation: boolean;
+  blob: { x: number; y: number; sigmaPx: number; contrast: number; gain: number } | null;
+}
+
+export type AbortReason = 'hidden' | 'resize';
+
+export interface RunnerDeps {
+  /** performance.now() */
+  now(): number;
+  /** requestAnimationFrame */
+  frame(cb: (t: number) => void): void;
+  draw(state: DrawState): void;
+  /** Plant den Ton; Beginn bei t0Ms + plan.soaMs auf der now()-Zeitachse. */
+  scheduleSound(plan: TrialPlan, t0Ms: number): void;
+  input: { arm(cb: (e: ResponseEvent) => void): void; disarm(): void };
+  geometry(): Geometry;
+  signals: { onAbort(cb: (reason: AbortReason) => void): () => void };
+}
+
+/** Vorlauf, mit dem der Ton vor seinem Beginn an die Audio-Uhr übergeben wird. */
+const SOUND_LOOKAHEAD_MS = 150;
+
+export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string): Promise<TrialRecord> {
+  return new Promise((resolve) => {
+    const t0 = deps.now() + plan.waitMs;
+    const stimEnd = t0 + 2 * plan.rampMs + plan.plateauMs;
+    const windowEnd = Math.max(t0 + plan.responseWindowMs, stimEnd);
+
+    let stim: { x: number; y: number; sigmaPx: number; contrast: number; sigmaDeg: number } | null = null;
+    if (plan.kind !== 'catch' && plan.pos && plan.level !== null) {
+      const g = deps.geometry();
+      const { contrast, sigmaDeg } = levelParams(plan.level);
+      const px = visualToPx(g, plan.pos);
+      stim = { ...px, contrast, sigmaDeg, sigmaPx: sigmaDegToPx(g, plan.pos.eccDeg, sigmaDeg) };
+    }
+
+    let responseMs: number | null = null;
+    let soundScheduled = false;
+    let finished = false;
+
+    const finish = (abortReason: AbortReason | null): void => {
+      if (finished) return;
+      finished = true;
+      deps.input.disarm();
+      unsubscribe();
+      deps.draw({ fixation: true, blob: null });
+      const rtMs = responseMs === null ? null : responseMs - t0;
+      resolve({
+        ...plan,
+        startedAtIso,
+        outcome: abortReason ? 'aborted' : classifyResponse(plan.kind, rtMs, plan.responseWindowMs),
+        rtMs: abortReason ? null : rtMs,
+        contrast: stim?.contrast ?? null,
+        sigmaDeg: stim?.sigmaDeg ?? null,
+        stimulusPx: stim ? { x: stim.x, y: stim.y } : null,
+        fixationOk: null,
+        abortReason,
+      });
+    };
+
+    const unsubscribe = deps.signals.onAbort((reason) => finish(reason));
+
+    // Antworten werden schon während der Wartezeit angenommen, damit Vorwegnahmen erkannt werden.
+    deps.input.arm((e) => {
+      responseMs = e.timeMs;
+    });
+
+    const tick = (): void => {
+      if (finished) return;
+      const now = deps.now();
+      if (!soundScheduled && plan.sound !== 'none' && now >= t0 + plan.soaMs - SOUND_LOOKAHEAD_MS) {
+        soundScheduled = true;
+        deps.scheduleSound(plan, t0);
+      }
+      const gain = stim ? envelope(now - t0, plan.rampMs, plan.plateauMs) : 0;
+      deps.draw({
+        fixation: true,
+        blob: stim && gain > 0 ? { x: stim.x, y: stim.y, sigmaPx: stim.sigmaPx, contrast: stim.contrast, gain } : null,
+      });
+      if ((responseMs !== null && now >= stimEnd) || now >= windowEnd) {
+        finish(null);
+        return;
+      }
+      deps.frame(tick);
+    };
+
+    deps.draw({ fixation: true, blob: null });
+    deps.frame(tick);
+  });
+}
