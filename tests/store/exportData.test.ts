@@ -30,6 +30,30 @@ describe('Export und Import', () => {
     expect(await b.getSettings()).toEqual(await a.getSettings());
   });
 
+  it('scheitert der Import mittendrin, bleiben die alten Daten vollständig erhalten', async () => {
+    const db = await freshDb();
+    await db.addSession({ id: 'alt', startedAtIso: 'a', endedAtIso: null, dayKey: '2026-10-10', kind: 'training', trialCount: 1 });
+    await db.addTrial(sampleRecord({ id: 'alt-0', sessionId: 'alt' }));
+    const bad = {
+      schema: EXPORT_SCHEMA,
+      exportedAtIso: 'x',
+      settings: DEFAULT_SETTINGS,
+      sessions: [],
+      trials: [sampleRecord({ id: 'neu-0' }), sampleRecord({ id: 'neu-0' })], // doppelte ID
+    };
+    await expect(importAll(db, bad)).rejects.toThrow();
+    expect((await db.listTrials()).map((t) => t.id)).toEqual(['alt-0']);
+    expect(await db.listSessions()).toHaveLength(1);
+  });
+
+  it('Datensätze ohne ID werden vor dem Löschen abgelehnt', async () => {
+    const db = await freshDb();
+    await db.addTrial(sampleRecord({ id: 'alt-0', sessionId: 'alt' }));
+    const bad = { schema: EXPORT_SCHEMA, exportedAtIso: 'x', settings: DEFAULT_SETTINGS, sessions: [{}], trials: [] };
+    await expect(importAll(db, bad)).rejects.toThrow(/Format/);
+    expect(await db.listTrials()).toHaveLength(1);
+  });
+
   it('falsches Format wird abgelehnt', async () => {
     const db = await freshDb();
     await expect(importAll(db, { schema: 'x' })).rejects.toThrow(/Format/);

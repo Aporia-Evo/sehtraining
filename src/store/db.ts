@@ -50,6 +50,8 @@ export interface Db {
   addTrial(t: TrialRecord): Promise<void>;
   listTrials(sessionId?: string): Promise<TrialRecord[]>;
   clearAll(): Promise<void>;
+  /** Ersetzt alle Daten in einer einzigen Transaktion: entweder alles oder nichts. */
+  replaceAll(data: { settings: Settings; sessions: SessionRecord[]; trials: TrialRecord[] }): Promise<void>;
 }
 
 const SETTINGS_KEY = 'main';
@@ -92,6 +94,27 @@ export async function openDb(name: string = DB_NAME): Promise<Db> {
     async clearAll() {
       const tx = idb.transaction(['settings', 'sessions', 'trials'], 'readwrite');
       await Promise.all([tx.objectStore('settings').clear(), tx.objectStore('sessions').clear(), tx.objectStore('trials').clear(), tx.done]);
+    },
+    async replaceAll(data) {
+      const tx = idb.transaction(['settings', 'sessions', 'trials'], 'readwrite');
+      const settings = tx.objectStore('settings');
+      const sessions = tx.objectStore('sessions');
+      const trials = tx.objectStore('trials');
+      try {
+        await Promise.all([settings.clear(), sessions.clear(), trials.clear()]);
+        await settings.put(data.settings, SETTINGS_KEY);
+        for (const s of data.sessions) await sessions.add(s);
+        for (const t of data.trials) await trials.add(t);
+        await tx.done;
+      } catch (e) {
+        try {
+          tx.abort();
+        } catch {
+          // Transaktion ist bereits abgebrochen
+        }
+        await tx.done.catch(() => undefined);
+        throw e;
+      }
     },
   };
 }

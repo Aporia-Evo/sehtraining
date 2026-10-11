@@ -22,19 +22,27 @@ export async function exportAll(db: Db, nowIso: string): Promise<ExportBundle> {
   };
 }
 
+const hasStringId = (r: unknown, key: string): boolean =>
+  typeof r === 'object' && r !== null && typeof (r as Record<string, unknown>)[key] === 'string';
+
 function isBundle(x: unknown): x is ExportBundle {
   if (typeof x !== 'object' || x === null) return false;
   const b = x as Partial<ExportBundle>;
-  return b.schema === EXPORT_SCHEMA && typeof b.settings === 'object' && Array.isArray(b.sessions) && Array.isArray(b.trials);
+  return (
+    b.schema === EXPORT_SCHEMA &&
+    typeof b.settings === 'object' &&
+    b.settings !== null &&
+    Array.isArray(b.sessions) &&
+    Array.isArray(b.trials) &&
+    b.sessions.every((s) => hasStringId(s, 'id')) &&
+    b.trials.every((t) => hasStringId(t, 'id') && hasStringId(t, 'sessionId'))
+  );
 }
 
-/** Ersetzt alle vorhandenen Daten durch den Inhalt der Sicherung. */
+/** Ersetzt alle vorhandenen Daten durch den Inhalt der Sicherung – atomar: bei einem Fehler bleibt alles beim Alten. */
 export async function importAll(db: Db, bundle: unknown): Promise<{ sessions: number; trials: number }> {
   if (!isBundle(bundle)) throw new Error('Unbekanntes Format: Das ist keine Sicherung dieser App.');
-  await db.clearAll();
-  await db.saveSettings(bundle.settings);
-  for (const s of bundle.sessions) await db.addSession(s);
-  for (const t of bundle.trials) await db.addTrial(t);
+  await db.replaceAll({ settings: bundle.settings, sessions: bundle.sessions, trials: bundle.trials });
   return { sessions: bundle.sessions.length, trials: bundle.trials.length };
 }
 
