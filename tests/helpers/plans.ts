@@ -21,3 +21,21 @@ export function samplePlan(overrides: Partial<TrialPlan> = {}): TrialPlan {
     ...overrides,
   };
 }
+
+import type { TrialRecord } from '../../src/core/types';
+
+/** Beispiel-Datensatz eines Durchgangs. */
+export function sampleRecord(overrides: Partial<TrialRecord> = {}): TrialRecord {
+  return {
+    ...samplePlan(),
+    startedAtIso: '2026-10-11T10:00:00.000Z',
+    outcome: 'hit',
+    rtMs: 420,
+    contrast: 0.89,
+    sigmaDeg: 0.5,
+    stimulusPx: { x: 300, y: 400 },
+    fixationOk: null,
+    abortReason: null,
+    ...overrides,
+  };
+}
