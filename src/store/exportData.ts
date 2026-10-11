@@ -79,9 +79,12 @@ export function trialsToCsv(trials: TrialRecord[]): string {
   return '﻿' + lines.join('\r\n') + '\r\n';
 }
 
-/** Teilen-Menü (iPad: AirDrop, Mail, Dateien), sonst normaler Download. */
-export async function shareOrDownload(filename: string, mime: string, content: string): Promise<void> {
-  const file = new File([content], filename, { type: mime });
+/**
+ * Teilen-Menü (iPad: AirDrop, Mail, Dateien), sonst normaler Download.
+ * Direkt aus dem Tipp-Handler aufrufen, ohne vorheriges await: Safari verlangt eine frische Nutzergeste.
+ */
+export async function shareOrDownload(file: File): Promise<void> {
+  const filename = file.name;
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.canShare?.({ files: [file] })) {
     try {
