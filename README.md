@@ -8,7 +8,7 @@ Stand: Meilenstein 1 (Grundgerüst). Es gibt einen Trainingsblock mit 20 Durchg�
 
 ## Installation auf dem iPad
 
-1. In Safari `https://aporia-evo.github.io/sehtraining/` öffnen.
+1. In Safari die Adresse der App öffnen (Cloudflare Pages, z. B. `https://sehtraining.pages.dev/`).
 2. Auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen.
 3. Die App ab jetzt nur über das neue Symbol auf dem Home-Bildschirm starten. Nur so läuft sie offline und im Vollbild, und nur dort bleiben die Daten erhalten.
 
@@ -38,7 +38,7 @@ Sprachansagen, Pausen alle 5 Minuten, 30-Minuten-Sitzungen und das Tageslimit ko
 
 ## Datenexport
 
-Die Seite `https://aporia-evo.github.io/sehtraining/#/export` (in M1 noch ohne PIN, nur über die Adresse erreichbar):
+Die Seite `…/#/export` (Adresse der App plus `#/export`) (in M1 noch ohne PIN, nur über die Adresse erreichbar):
 
 - **Alles sichern (JSON):** vollständige Sicherung aller Einstellungen, Sitzungen und Durchgänge. Auf dem iPad öffnet sich das Teilen-Menü (AirDrop, Mail, Dateien).
 - **Durchgänge als Tabelle (CSV):** eine Zeile pro Durchgang, Semikolon-getrennt, öffnet direkt in Excel.
@@ -64,4 +64,16 @@ npm run build      # Produktions-Build nach dist/
 npm run icons      # App-Icons neu erzeugen
 ```
 
-Ein Push auf `main` testet, baut und veröffentlicht die App über GitHub Pages (Repo-Einstellungen → Pages → Quelle „GitHub Actions“).
+Veröffentlicht wird über **Cloudflare Pages**: Bei jedem Push auf `main` baut Cloudflare die App neu. Einstellungen des Cloudflare-Projekts:
+
+| Feld | Wert |
+|---|---|
+| Production branch | `main` |
+| Framework preset | `None` |
+| Build command | `npm test && npm run build` |
+| Build output directory | `dist` |
+| Umgebungsvariable | `NODE_VERSION` = `22` |
+
+Weil der Build-Befehl zuerst die Tests ausführt, wird nie eine Version mit roten Tests veröffentlicht.
+
+Der GitHub-Workflow `.github/workflows/deploy.yml` (GitHub Pages) läuft nur noch von Hand (Actions → „Test und Veröffentlichung“ → „Run workflow“). Er ist die Ausweichmöglichkeit, falls Cloudflare einmal wegfällt; dafür `base` in `vite.config.ts` wieder auf `/sehtraining/` setzen.
