@@ -158,6 +158,19 @@ describe('next()', () => {
     expect(plans.every((x) => x.phase === '2')).toBe(true);
     expect(plans.some((x) => x.sound === 'lead' && x.soaMs <= -100 && x.soaMs >= -300)).toBe(true);
   });
+
+  it('führender Ton: Wartezeit zählt bis zum ersten Reiz, also mindestens 1 s bis zum Ton', () => {
+    const s = createControllerState(g);
+    s.phase.stage = '2';
+    const p = planner(s);
+    const plans = Array.from({ length: 500 }, () => p.next());
+    const led = plans.filter((x) => x.soaMs < 0);
+    expect(led.length).toBeGreaterThan(0);
+    for (const x of plans) {
+      expect(x.waitMs + Math.min(0, x.soaMs)).toBeGreaterThanOrEqual(1000);
+      expect(x.waitMs + Math.min(0, x.soaMs)).toBeLessThanOrEqual(2500);
+    }
+  });
 });
 
 describe('apply()', () => {

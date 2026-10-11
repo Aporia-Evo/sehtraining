@@ -131,7 +131,8 @@ export function createSessionPlanner(s: ControllerState, opts: SessionPlannerOpt
         sound: snd.sound,
         soaMs: snd.soaMs,
         soundGainDb: snd.soundGainDb,
-        waitMs: rng.uniform(WAIT_MIN_MS, WAIT_MAX_MS),
+        // Der Ton darf bis zu 300 ms vor dem Licht beginnen; die Wartezeit zählt bis zum ersten Reiz (Ton oder Licht).
+        waitMs: rng.uniform(WAIT_MIN_MS, WAIT_MAX_MS) - Math.min(0, snd.soaMs),
         rampMs: RAMP_MS,
         plateauMs: PLATEAU_MS,
         responseWindowMs: opts.responseWindowMs,
