@@ -6,11 +6,12 @@ import { DEFAULT_WINDOW_MS } from '../../core/trial';
 import type { TrialRecord } from '../../core/types';
 import type { AudioEngine } from '../../io/audio';
 import type { Db, SessionRecord, Settings } from '../../store/db';
-import { currentGeometry, isLandscape } from '../browserDeps';
+import { currentGeometry } from '../browserDeps';
 import { blockSummary } from '../routing';
 import { dayKey, newId, runBlock } from '../session';
 import { TrialStage } from '../TrialStage';
 import { unlockAudio } from '../unlockAudio';
+import { viewportMatches } from '../validate';
 
 export const M1_BLOCK_TRIALS = 20;
 
@@ -18,7 +19,8 @@ type View = { kind: 'running'; run: number } | { kind: 'paused' } | { kind: 'sum
 
 export function TrainingScreen(props: { db: Db; audio: AudioEngine; settings: Settings; onExit(): void }) {
   const geometry = props.settings.geometry!;
-  const [view, setView] = useState<View>(() => (isLandscape() ? { kind: 'running', run: 0 } : { kind: 'paused' }));
+  const windowOk = () => viewportMatches(props.settings.setupViewport, window.innerWidth, window.innerHeight);
+  const [view, setView] = useState<View>(() => (windowOk() ? { kind: 'running', run: 0 } : { kind: 'paused' }));
   const records = useRef<TrialRecord[]>([]);
   const session = useRef<SessionRecord | null>(null);
   const planner = useRef<ReturnType<typeof createBasicPlanner> | null>(null);
@@ -38,7 +40,7 @@ export function TrainingScreen(props: { db: Db; audio: AudioEngine; settings: Se
   };
 
   const resume = () => {
-    if (!isLandscape()) return;
+    if (!windowOk()) return;
     unlockAudio(props.audio);
     setView({ kind: 'running', run: Date.now() });
   };
@@ -81,7 +83,11 @@ export function TrainingScreen(props: { db: Db; audio: AudioEngine; settings: Se
   if (view.kind === 'paused') {
     return (
       <div class="patient screen overlay-message" onClick={resume}>
-        {isLandscape() ? 'Pause. Tippe zum Weitermachen.' : 'Bitte das iPad quer halten.'}
+        {windowOk()
+          ? 'Pause. Tippe zum Weitermachen.'
+          : window.innerWidth < window.innerHeight
+            ? 'Bitte das iPad quer halten.'
+            : 'Bitte die App im Vollbild verwenden.'}
       </div>
     );
   }

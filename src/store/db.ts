@@ -13,6 +13,8 @@ export interface Settings {
   audio: AudioSettings;
   referenceRtsMs: number[];
   responseWindowMs: number | null;
+  /** Fenstergröße (CSS-Pixel) bei der Einrichtung; die Bildbreite in cm gilt nur für genau diese Größe. */
+  setupViewport: { width: number; height: number } | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -21,6 +23,7 @@ export const DEFAULT_SETTINGS: Settings = {
   audio: { outputMode: 'headphones', volume: 0.5, balance: 0 },
   referenceRtsMs: [],
   responseWindowMs: null,
+  setupViewport: null,
 };
 
 /** Startwerte für die Geometrie im Einrichtungsassistenten. */

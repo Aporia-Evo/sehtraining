@@ -21,3 +21,16 @@ export function geometryProblems(g: Geometry): string[] {
   if (gridPoints(g, 'R').length === 0) problems.push('Rechts passt kein Reizort auf den Bildschirm. Abstand verringern oder Kreuz weiter nach links.');
   return problems;
 }
+
+/** Toleranz für die Fenstergröße gegenüber der Einrichtung. */
+const VIEWPORT_TOLERANCE = 0.02;
+
+/**
+ * Training nur im Querformat und in der Fenstergröße der Einrichtung. In Split View oder Stage Manager
+ * wäre die Umrechnung cm → Pixel falsch und alle Gradangaben verfälscht.
+ */
+export function viewportMatches(setup: { width: number; height: number } | null, width: number, height: number): boolean {
+  if (width < height) return false;
+  if (!setup) return true;
+  return Math.abs(width - setup.width) <= setup.width * VIEWPORT_TOLERANCE && Math.abs(height - setup.height) <= setup.height * VIEWPORT_TOLERANCE;
+}

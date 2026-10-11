@@ -33,3 +33,21 @@ describe('geometryProblems', () => {
     expect(geometryProblems(g)[0]).toMatch(/rechts/i);
   });
 });
+
+import { viewportMatches } from '../../src/ui/validate';
+
+describe('viewportMatches', () => {
+  const setup = { width: 1180, height: 820 };
+  it('gleiche Größe (auch nach Drehen um 180°) passt', () => {
+    expect(viewportMatches(setup, 1180, 820)).toBe(true);
+    expect(viewportMatches(setup, 1185, 815)).toBe(true); // ±2 % Toleranz
+  });
+  it('Split View oder Hochformat passt nicht', () => {
+    expect(viewportMatches(setup, 780, 820)).toBe(false);
+    expect(viewportMatches(setup, 820, 1180)).toBe(false);
+  });
+  it('ohne gespeicherte Größe (alte Einrichtung) passt alles im Querformat', () => {
+    expect(viewportMatches(null, 1000, 700)).toBe(true);
+    expect(viewportMatches(null, 700, 1000)).toBe(false);
+  });
+});

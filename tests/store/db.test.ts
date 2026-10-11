@@ -69,3 +69,13 @@ describe('Db', () => {
     expect(await db.getSettings()).toEqual(DEFAULT_SETTINGS);
   });
 });
+
+describe('Settings.setupViewport', () => {
+  it('Standard ist null, alte Einstellungen ohne Feld bekommen null', async () => {
+    expect(DEFAULT_SETTINGS.setupViewport).toBeNull();
+    const db = await openDb(`test-db-${n++}`);
+    const { setupViewport: _omit, ...old } = DEFAULT_SETTINGS;
+    await db.saveSettings(old as typeof DEFAULT_SETTINGS);
+    expect((await db.getSettings()).setupViewport).toBeNull();
+  });
+});

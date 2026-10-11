@@ -31,7 +31,7 @@ export function SetupWizard(props: { db: Db; audio: AudioEngine; onDone(): void 
       case 'disclaimer':
         return <Disclaimer onAccept={() => void save({ ...settings, disclaimerAcceptedAt: new Date().toISOString() }, 'geometry')} />;
       case 'geometry':
-        return <GeometryStep initial={settings.geometry ?? DEFAULT_GEOMETRY} onNext={(geometry) => void save({ ...settings, geometry }, 'audio')} />;
+        return <GeometryStep initial={settings.geometry ?? DEFAULT_GEOMETRY} onNext={(geometry) => void save({ ...settings, geometry, setupViewport: { width: window.innerWidth, height: window.innerHeight } }, 'audio')} />;
       case 'audio':
         return (
           <AudioStep
