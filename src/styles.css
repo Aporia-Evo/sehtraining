@@ -35,3 +35,83 @@ body {
   user-select: text;
   box-sizing: border-box;
 }
+
+.admin h1 {
+  font-size: 30px;
+  margin: 0 0 16px;
+}
+
+.admin p {
+  max-width: 46em;
+  line-height: 1.45;
+}
+
+.admin button,
+.admin input,
+.admin select {
+  font-size: 22px;
+}
+
+.admin button {
+  padding: 12px 22px;
+  margin: 8px 8px 8px 0;
+  border-radius: 10px;
+  background: #555;
+  color: #e0e0e0;
+  border: 1px solid #777;
+}
+
+.admin button.primary {
+  background: #2f5f8a;
+  border-color: #4a7fae;
+}
+
+.admin label {
+  display: block;
+  margin: 14px 0 6px;
+}
+
+.admin input[type='text'],
+.admin input[type='number'] {
+  width: 8em;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #777;
+  background: #2e2e2e;
+  color: #e0e0e0;
+}
+
+.admin input[type='range'] {
+  width: 22em;
+  max-width: 90%;
+}
+
+.admin .error {
+  color: #f0b0a0;
+}
+
+.admin .hint {
+  color: #b8b8b8;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+}
+
+.stage canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+.overlay-message {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 5vw;
+  box-sizing: border-box;
+}
