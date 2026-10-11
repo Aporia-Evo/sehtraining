@@ -76,10 +76,11 @@ export function createCanvasDraw(canvas: HTMLCanvasElement, getGeometry: () => G
     }
 
     if (state.fixation) {
-      const arm = sigmaDegToPx(g, 0, 0.5) * dpr;
-      const lw = Math.max(2, sigmaDegToPx(g, 0, 0.1) * dpr);
-      const cx = g.fixPx.x * dpr;
-      const cy = g.fixPx.y * dpr;
+      // auf ganze Gerätepixel gerundet: scharfes Kreuz ohne Kantenglättung
+      const arm = Math.round(sigmaDegToPx(g, 0, 0.5) * dpr);
+      const lw = Math.max(2, Math.round(sigmaDegToPx(g, 0, 0.1) * dpr));
+      const cx = Math.round(g.fixPx.x * dpr);
+      const cy = Math.round(g.fixPx.y * dpr);
       ctx.fillStyle = FG_CSS;
       ctx.fillRect(cx - arm, cy - lw / 2, 2 * arm, lw);
       ctx.fillRect(cx - lw / 2, cy - arm, lw, 2 * arm);

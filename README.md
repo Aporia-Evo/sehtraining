@@ -4,7 +4,7 @@ Audiovisuelles Heimtraining bei Hemianopsie nach links, als Web-App für das iPa
 
 > **Hinweis:** Diese App ist kein Medizinprodukt und stellt keine Diagnosen. Sie ergänzt ein ärztlich begleitetes Training und ersetzt es nicht.
 
-Stand: Meilenstein 1 (Grundgerüst) in Arbeit. Das fachliche Design steht in `docs/superpowers/specs/2026-10-11-sehtraining-design.md`.
+Stand: Meilenstein 1 (Grundgerüst). Es gibt einen Trainingsblock mit 20 Durchgängen auf fester mittlerer Reizstärke. Karte, Treppenregel, Phasen, Sprachansagen und PIN-Bereich folgen in den nächsten Meilensteinen. Das fachliche Design steht in `docs/superpowers/specs/2026-10-11-sehtraining-design.md`.
 
 ## Installation auf dem iPad
 
@@ -23,15 +23,28 @@ Updates kommen automatisch, wenn das iPad beim Start Internet hat.
 
 ## Einrichtung
 
-Folgt mit Meilenstein 1.
+Beim ersten Start öffnet sich der Einrichtungsassistent. Später erreichst du ihn über `#/export` → „Einrichtung wiederholen“.
+
+1. **Hinweis** „kein Medizinprodukt“ lesen und bestätigen. Ohne Bestätigung startet kein Training.
+2. **Bildschirm und Abstand:** die sichtbare Bildbreite mit dem Lineal messen (Komma erlaubt, z. B. „24,5“) und den Abstand Augen–Bildschirm eintragen. Der Schieber setzt das Fixationskreuz nach rechts, damit links mehr Platz ist (Standard 67 %). Darunter steht, wie weit das Bild in Grad reicht.
+3. **Ton:** Kopfhörer (empfohlen) oder iPad-Lautsprecher wählen, links und rechts testen, Lautstärke und Balance so einstellen, dass beide Seiten für ihn gleich laut sind.
+4. **Reaktionszeit rechts:** 20 kurze Durchgänge ohne Ton im sehenden rechten Feld. Daraus berechnet die App, wie lange sie nach einem Licht auf sein Tippen wartet (zwischen 1,5 und 3 Sekunden).
 
 ## Tägliche Nutzung
 
-Folgt mit Meilenstein 3.
+Stand M1: Auf dem Startbildschirm auf „Start“ tippen (oder irgendwo). Er schaut auf das Kreuz und tippt auf den Bildschirm, sobald er ein Licht sieht. Nach 20 Durchgängen erscheint „Heute X von Y gefunden.“ Wird die App verlassen oder das iPad gedreht, pausiert das Training; ein Tippen setzt es fort.
+
+Sprachansagen, Pausen alle 5 Minuten, 30-Minuten-Sitzungen und das Tageslimit kommen mit Meilenstein 3.
 
 ## Datenexport
 
-Folgt mit Meilenstein 1.
+Die Seite `https://aporia-evo.github.io/sehtraining/#/export` (in M1 noch ohne PIN, nur über die Adresse erreichbar):
+
+- **Alles sichern (JSON):** vollständige Sicherung aller Einstellungen, Sitzungen und Durchgänge. Auf dem iPad öffnet sich das Teilen-Menü (AirDrop, Mail, Dateien).
+- **Durchgänge als Tabelle (CSV):** eine Zeile pro Durchgang, Semikolon-getrennt, öffnet direkt in Excel.
+- **Sicherung einspielen:** eine JSON-Sicherung auswählen. Die vorhandenen Daten werden nach Rückfrage ersetzt.
+
+Dort gibt es auch eine **Testseite**, auf der du einzelne Reize mit wählbarer Stufe, Ort und Ton ansehen kannst.
 
 ## Datenschutz
 

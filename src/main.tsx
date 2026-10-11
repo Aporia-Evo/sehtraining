@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import { App } from './ui/App';
 import './styles.css';
 
-render(<div class="patient screen">Sehtraining</div>, document.getElementById('app')!);
+render(<App />, document.getElementById('app')!);
