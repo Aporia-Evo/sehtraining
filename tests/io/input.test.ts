@@ -2,9 +2,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { ResponseInput, type ResponseEvent } from '../../src/io/input';
 
-function pointerDown(target: EventTarget): Event {
+let clock = 10_000;
+
+function pointerDown(target: EventTarget, timeStamp?: number): Event {
   // jsdom kennt PointerEvent nicht in allen Versionen; ein Event mit passendem Typ genügt
   const ev = new Event('pointerdown', { bubbles: true, cancelable: true });
+  // Zeitstempel steuerbar machen; ohne Angabe liegen Ereignisse 1 s auseinander
+  clock += 1000;
+  Object.defineProperty(ev, 'timeStamp', { value: timeStamp ?? clock });
   target.dispatchEvent(ev);
   return ev;
 }
@@ -82,5 +87,22 @@ describe('ResponseInput', () => {
     input.dispose();
     pointerDown(target);
     expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('zweites Tippen innerhalb 250 ms nach einer Antwort zählt nicht für den nächsten Durchgang', () => {
+    input.arm(cb);
+    pointerDown(target, 50_000);
+    input.arm(cb);
+    pointerDown(target, 50_120); // Doppeltippen / Prellen
+    expect(cb).toHaveBeenCalledTimes(1);
+    pointerDown(target, 50_400); // echte nächste Antwort
+    expect(cb).toHaveBeenCalledTimes(2);
+  });
+
+  it('ein nicht angenommenes Tippen verlängert die Sperre nicht', () => {
+    pointerDown(target, 60_000); // ohne arm: wird ignoriert
+    input.arm(cb);
+    pointerDown(target, 60_100);
+    expect(cb).toHaveBeenCalledTimes(1);
   });
 });

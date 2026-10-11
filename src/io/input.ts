@@ -6,8 +6,12 @@ export interface ResponseEvent {
   source: 'pointer' | 'key';
 }
 
+/** Sperrzeit nach einer angenommenen Antwort: Doppeltippen und prellende Taster zählen nicht für den nächsten Durchgang. */
+export const REFRACTORY_MS = 250;
+
 export class ResponseInput {
   private callback: ((e: ResponseEvent) => void) | null = null;
+  private lastAcceptedMs = -Infinity;
 
   private readonly onPointer = (ev: Event): void => {
     // Unterdrückt Kompatibilitäts-Mausereignisse, Zoom und Textauswahl
@@ -43,6 +47,8 @@ export class ResponseInput {
   private emit(e: ResponseEvent): void {
     const cb = this.callback;
     if (!cb) return;
+    if (e.timeMs - this.lastAcceptedMs < REFRACTORY_MS) return;
+    this.lastAcceptedMs = e.timeMs;
     this.callback = null;
     cb(e);
   }
