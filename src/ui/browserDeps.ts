@@ -18,9 +18,18 @@ export function createAbortSignals(win: Window, doc: Document): RunnerDeps['sign
       const onResize = () => {
         if (win.innerWidth !== w0 || win.innerHeight !== h0) cb('resize');
       };
+      let active = true;
       doc.addEventListener('visibilitychange', onVis);
       win.addEventListener('resize', onResize);
+      // Schon beim Anmelden im Hintergrund (Wechsel zwischen zwei Durchgängen): gleich melden,
+      // aber erst nach Abschluss der Anmeldung
+      if (doc.visibilityState === 'hidden') {
+        queueMicrotask(() => {
+          if (active) cb('hidden');
+        });
+      }
       return () => {
+        active = false;
         doc.removeEventListener('visibilitychange', onVis);
         win.removeEventListener('resize', onResize);
       };

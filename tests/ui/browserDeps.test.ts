@@ -14,6 +14,18 @@ describe('createAbortSignals', () => {
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
   });
 
+  it('meldet hidden sofort, wenn die App beim Anmelden schon im Hintergrund ist', async () => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    const s = createAbortSignals(window, document);
+    const cb = vi.fn();
+    const off = s.onAbort(cb);
+    expect(cb).not.toHaveBeenCalled(); // nicht synchron: der Aufrufer ist noch nicht fertig angemeldet
+    await Promise.resolve();
+    expect(cb).toHaveBeenCalledWith('hidden');
+    off();
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
   it('meldet resize nur bei geänderter Größe', () => {
     const s = createAbortSignals(window, document);
     const cb = vi.fn();

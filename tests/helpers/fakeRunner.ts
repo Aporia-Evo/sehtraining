@@ -54,6 +54,13 @@ export function fakeDeps() {
         for (const f of fs) f(now);
       }
     },
+    /** Uhr ohne Zwischenframes auf t springen (Bildschirm eingefroren), dann einen Frame ausführen. */
+    jumpTo(t: number) {
+      now = t;
+      const fs = frames;
+      frames = [];
+      for (const f of fs) f(now);
+    },
     respondAt(t: number) {
       this.advanceTo(t);
       armed?.({ timeMs: t, source: 'pointer' });

@@ -13,7 +13,8 @@ export interface DrawState {
   blob: { x: number; y: number; sigmaPx: number; contrast: number; gain: number } | null;
 }
 
-export type AbortReason = 'hidden' | 'resize';
+/** hidden: App im Hintergrund; resize: Fenstergröße geändert; stall: Bild stand still (z. B. Systemeinblendung). */
+export type AbortReason = 'hidden' | 'resize' | 'stall';
 
 export interface RunnerDeps {
   /** performance.now() */
@@ -30,6 +31,8 @@ export interface RunnerDeps {
 
 /** Vorlauf, mit dem der Ton vor seinem Beginn an die Audio-Uhr übergeben wird. */
 const SOUND_LOOKAHEAD_MS = 150;
+/** Größte erlaubte Lücke zwischen zwei Frames, solange Reiz oder Antwortfenster laufen. */
+export const MAX_FRAME_GAP_MS = 150;
 
 export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string): Promise<TrialRecord> {
   return new Promise((resolve) => {
@@ -48,6 +51,7 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
     let responseMs: number | null = null;
     let soundScheduled = false;
     let finished = false;
+    let lastFrameMs = deps.now();
 
     const finish = (abortReason: AbortReason | null): void => {
       if (finished) return;
@@ -79,6 +83,13 @@ export function runTrial(plan: TrialPlan, deps: RunnerDeps, startedAtIso: string
     const tick = (): void => {
       if (finished) return;
       const now = deps.now();
+      const prev = lastFrameMs;
+      lastFrameMs = now;
+      // Stand das Bild während Reiz oder Antwortfenster still, ist der Durchgang nicht auswertbar
+      if (now - prev > MAX_FRAME_GAP_MS && now > t0 && prev < windowEnd) {
+        finish('stall');
+        return;
+      }
       if (!soundScheduled && plan.sound !== 'none' && now >= t0 + plan.soaMs - SOUND_LOOKAHEAD_MS) {
         soundScheduled = true;
         deps.scheduleSound(plan, t0);

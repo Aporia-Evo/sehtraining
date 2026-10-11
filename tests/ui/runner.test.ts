@@ -94,4 +94,24 @@ describe('runTrial', () => {
     expect(f.draws.find((d) => d.t === T0 - 5)!.state.blob).toBeNull();
     expect(f.draws.every((d) => d.state.fixation)).toBe(true);
   });
+
+  it('eingefrorene Frames während Reiz oder Antwortfenster → abgebrochen (stall), nicht verpasst', async () => {
+    const f = fakeDeps();
+    const p = runTrial(samplePlan(), f.deps, ISO);
+    f.advanceTo(T0 + 50);
+    f.jumpTo(T0 + 2500);
+    const r = await p;
+    expect(r.outcome).toBe('aborted');
+    expect(r.abortReason).toBe('stall');
+  });
+
+  it('eine Lücke nur in der Wartezeit stört nicht', async () => {
+    const f = fakeDeps();
+    const p = runTrial(samplePlan(), f.deps, ISO);
+    f.advanceTo(100);
+    f.jumpTo(T0 - 200);
+    f.advanceTo(T0 + 2100);
+    const r = await p;
+    expect(r.outcome).toBe('miss');
+  });
 });
